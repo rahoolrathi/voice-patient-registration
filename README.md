@@ -86,7 +86,7 @@ REST endpoints: GET/POST/PUT/DELETE /patients
    ```bash
    npm install
    ```
-2.create `.env` and fill in your own Neon connection string:
+2. Copy `.env.example` to `.env` and fill in your own Neon connection string:
    ```
    DATABASE_URL=postgresql://<user>:<password>@<host>/<db>?sslmode=require
    PORT=3000
@@ -163,5 +163,24 @@ All three tools point at the same webhook: `POST /vapi/tool-call`, which
 dispatches to the matching database operation and returns the result back to
 Vapi in the format it expects.
 
+## Known limitations / trade-offs
 
+- **`update_patient` path has an intermittent issue.** During testing, a
+  returning-caller flow (`find_patient_by_phone` → `update_patient`)
+  surfaced an error where the update did not complete successfully. The
+  `create_patient` flow (new patient registration) was tested repeatedly and
+  works reliably end-to-end, including over the live phone number. Given time
+  constraints, this was deprioritized since duplicate detection/update is
+  listed as a bonus feature in the assessment, not a core requirement.
+- **Outbound self-testing of the live number was limited** by Vapi's free-tier
+  daily outbound call cap — inbound calling (the actual requirement, since
+  the reviewer calls in) is unaffected by this limit. The full conversational
+  flow was validated repeatedly using Vapi's in-browser test-call feature,
+  which exercises the identical assistant, prompt, and tools as the live
+  phone number.
+- **No automated tests** were written for the API layer, due to time
+  constraints.
+- **No appointment scheduling, multi-language support, call transcripts, or
+  dashboard UI** were implemented — these were bonus items not required for
+  the core submission.
 
