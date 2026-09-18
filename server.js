@@ -1,9 +1,9 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
 
-const patientRoutes = require('./routes/patients');
-const vapiRoutes = require('./routes/vapi');
+const patientRoutes = require("./routes/patients");
+const vapiRoutes = require("./routes/vapi");
 
 const app = express();
 
@@ -15,15 +15,20 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/health', (req, res) => {
-  res.json({ data: { status: 'ok' }, error: null });
+app.get("/health", (req, res) => {
+  res.json({ data: { status: "ok" }, error: null });
 });
 
-app.use('/patients', patientRoutes);
-app.use('/vapi', vapiRoutes);
+app.use(express.static("public"));
+app.get("/dashboard", (req, res) => {
+  res.sendFile(__dirname + "/public/dashboard.html");
+});
+
+app.use("/patients", patientRoutes);
+app.use("/vapi", vapiRoutes);
 
 app.use((req, res) => {
-  res.status(404).json({ data: null, error: { message: 'Route not found' } });
+  res.status(404).json({ data: null, error: { message: "Route not found" } });
 });
 
 const PORT = process.env.PORT || 3000;

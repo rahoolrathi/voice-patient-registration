@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Patient Registration Dashboard</title>
+    <style>
+      body {
+        font-family:
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        margin: 0;
+        padding: 2rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+      }
+      p.sub {
+        color: #94a3b8;
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+      }
+      input {
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #e2e8f0;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        width: 260px;
+        margin-bottom: 1rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #1e293b;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.6rem 0.8rem;
+        border-bottom: 1px solid #334155;
+        font-size: 0.9rem;
+      }
+      th {
+        background: #273449;
+        color: #cbd5e1;
+      }
+      tr:hover {
+        background: #24314a;
+      }
+      #status {
+        color: #94a3b8;
+        margin-bottom: 1rem;
+      }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        background: #334155;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Patient Registration Dashboard</h1>
+    <p class="sub">Registered patients, live from the API.</p>
+
+    <input id="search" placeholder="Filter by last name..." />
+    <div id="status">Loading...</div>
+    <table id="table" style="display: none">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>DOB</th>
+          <th>Sex</th>
+          <th>Phone</th>
+          <th>City / State</th>
+          <th>Insurance</th>
+          <th>Registered</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const tableEl = document.getElementById("table");
+      const rowsEl = document.getElementById("rows");
+      const searchEl = document.getElementById("search");
+
+      async function loadPatients(lastName) {
+        statusEl.style.display = "block";
+        tableEl.style.display = "none";
+        statusEl.textContent = "Loading...";
+
+        const url = lastName
+          ? `/patients?last_name=${encodeURIComponent(lastName)}`
+          : "/patients";
+
+        try {
+          const res = await fetch(url);
+          const body = await res.json();
+
+          if (body.error) {
+            statusEl.textContent = "Error: " + body.error.message;
+            return;
+          }
+
+          const patients = body.data || [];
+          rowsEl.innerHTML = "";
+
+          if (patients.length === 0) {
+            statusEl.textContent = "No patients found.";
+            return;
+          }
+
+          patients.forEach((p) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+            <td>${p.first_name} ${p.last_name}</td>
+            <td>${p.date_of_birth}</td>
+            <td><span class="badge">${p.sex}</span></td>
+            <td>${p.phone_number}</td>
+            <td>${p.city}, ${p.state}</td>
+            <td>${p.insurance_provider || "—"}</td>
+            <td>${new Date(p.created_at).toLocaleString()}</td>
+          `;
+            rowsEl.appendChild(tr);
+          });
+
+          statusEl.style.display = "none";
+          tableEl.style.display = "table";
+        } catch (err) {
+          statusEl.textContent = "Failed to load patients: " + err.message;
+        }
+      }
+
+      let debounceTimer;
+      searchEl.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(
+          () => loadPatients(searchEl.value.trim()),
+          300,
+        );
+      });
+
+      loadPatients();
+    </script>
+  </body>
+</html>
